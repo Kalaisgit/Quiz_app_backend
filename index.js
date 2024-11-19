@@ -74,6 +74,34 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// 3. Create Quiz Question (Teacher Only)
+app.post("/questions", authenticateToken, async (req, res) => {
+  if (req.user.role !== "Teacher")
+    return res.status(403).json({ message: "Access denied" });
+
+  const { question, option_a, option_b, option_c, option_d, correct_option } =
+    req.body;
+  const teacherId = req.user.id;
+
+  try {
+    const result = await pool.query(
+      "INSERT INTO Questions (question, option_a, option_b, option_c, option_d, correct_option, teacher_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+      [
+        question,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        correct_option,
+        teacherId,
+      ]
+    );
+    res.status(201).json({ id: result.rows[0].id });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
