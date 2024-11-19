@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import cors from "cors";
-import { Pool } from "pg";
+import pg from "pg";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -10,13 +10,14 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT ? process.env.PORT : 5001;
 
-const pool = new Pool({
+const db = new pg.Client({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
 });
+db.connect();
 
 app.use(express.json());
 app.use(cors());
@@ -39,7 +40,7 @@ app.post("/register", async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
-    const result = await pool.query(
+    const result = await db.query(
       "INSERT INTO Users (username, password, role) VALUES ($1, $2, $3) RETURNING id",
       [username, hashedPassword, role]
     );
@@ -54,7 +55,7 @@ app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const result = await pool.query("SELECT * FROM Users WHERE username = $1", [
+    const result = await db.query("SELECT * FROM Users WHERE username = $1", [
       username,
     ]);
     const user = result.rows[0];
@@ -84,7 +85,7 @@ app.post("/questions", authenticateToken, async (req, res) => {
   const teacherId = req.user.id;
 
   try {
-    const result = await pool.query(
+    const result = await db.query(
       "INSERT INTO Questions (question, option_a, option_b, option_c, option_d, correct_option, teacher_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
       [
         question,
@@ -105,10 +106,40 @@ app.post("/questions", authenticateToken, async (req, res) => {
 // 4. Get Quiz Questions (For Students)
 app.get("/questions", async (req, res) => {
   try {
-    const result = await pool.query(
+    const result = await db.query(
       "SELECT * FROM Questions ORDER BY RANDOM() LIMIT 5"
     );
     res.json(result.rows);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// 5. Submit Quiz and Get Results (For Students)
+app.post("/submit", authenticateToken, async (req, res) => {
+  const { answers } = req.body;
+  let score = 0;
+
+  try {
+    const questionsResult = await db.query(
+      "SELECT * FROM Questions WHERE id = ANY($1)",
+      [answers.map((ans) => ans.id)]
+    );
+    const questions = questionsResult.rows;
+
+    answers.forEach((ans) => {
+      const question = questions.find((q) => q.id === ans.id);
+      if (question.correct_option === ans.selectedOption) {
+        score += 1;
+      }
+    });
+
+    // Save result in Results table
+    await db.query("INSERT INTO Results (student_id, score) VALUES ($1, $2)", [
+      req.user.id,
+      score,
+    ]);
+    res.json({ score });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
