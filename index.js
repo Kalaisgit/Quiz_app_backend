@@ -102,6 +102,18 @@ app.post("/questions", authenticateToken, async (req, res) => {
   }
 });
 
+// 4. Get Quiz Questions (For Students)
+app.get("/questions", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM Questions ORDER BY RANDOM() LIMIT 5"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
