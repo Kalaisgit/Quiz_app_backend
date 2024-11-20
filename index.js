@@ -63,6 +63,11 @@ function generateToken(user) {
   );
 }
 
+app.get(`/`, async (req, res) => {
+  console.log("Welcome page");
+  res.send("Welcome to the app!");
+});
+
 // 1. User Registration
 app.post("/register", async (req, res) => {
   const { username, password, role } = req.body;
