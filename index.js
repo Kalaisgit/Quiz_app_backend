@@ -186,7 +186,6 @@ app.post("/submit", authenticateToken, async (req, res) => {
   }
 });
 
-// Teacher Dashboard Route (Protected)
 
 // Get all students
 async function getStudents() {
@@ -201,37 +200,21 @@ async function getStudents() {
   }
 }
 
-// Get top student based on score
-async function getTopStudent() {
-  try {
-    const result = await db.query(
-      `SELECT u.id, u.username, r.score
-       FROM Results r
-       JOIN Users u ON r.student_id = u.id
-       ORDER BY r.score DESC
-       LIMIT 1`
-    );
-    return result.rows[0]; // The top student, with the highest score
-  } catch (err) {
-    console.error("Error fetching top student:", err);
-    throw new Error("Unable to fetch top student");
-  }
-}
 
 app.get("/teacher-dashboard", async (req, res) => {
   try {
     // Fetch students and top student data from your database
     const students = await getStudents(); // Replace with actual DB call
-    const topStudent = await getTopStudent(); // Replace with actual DB call
+    
 
-    res.json({ students, topStudent });
+    res.json({ students });
   } catch (err) {
     console.error("Error in /teacher-dashboard route:", err);
     res.status(500).json({ error: "Unable to fetch teacher dashboard data" });
   }
 });
 
-// Example route to add a new question
+
 // Add new question route
 app.post("/add-question", async (req, res) => {
   const {
