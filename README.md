@@ -16,7 +16,7 @@ To run this project,
 Clone the this repository in your local, using the below command In the terminal of your VScode, type, "link" and hit ENTER key. The repo is now available locally,
 
 Frontend:
-To cd into the frontend of the project, type, cd "drag and drop the frontend folder" and hit ENTER. Your are in your frontend of the project, add .env file inside src that has the key and value pair of url, the endpoints are about hit->(http://localhost/5001)
+To cd into the frontend of the project, type, cd "drag and drop the frontend folder" and hit ENTER. Your are in your frontend of the project, add .env file inside root folder that has the key and value pair of url, the endpoints are about hit->(http://localhost/5001)
 
 Type the below command, in your terminal. " npm i " and hit ENTER key. This should probably install npm packages and their dependencies inside the package.json file.
 
